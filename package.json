@@ -1,0 +1,16 @@
+{
+  "name": "kashmir-studio",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "studio": "remotion studio src/index.tsx --port 3000"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.200",
+    "@remotion/zod-types": "4.0.200",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "remotion": "4.0.200",
+    "zod": "3.22.4"
+  }
+}
