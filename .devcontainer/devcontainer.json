@@ -1,8 +1,7 @@
 {
   "name": "Remotion Video Studio",
   "image": "mcr.microsoft.com/devcontainers/javascript-node:1-20-bullseye",
-  "postCreateCommand": "npm init -y && npm install react@18.2.0 react-dom@18.2.0 remotion@4.0.200 @remotion/cli@4.0.200 @remotion/zod-types@4.0.200 zod@3.22.4",
-  "postAttachCommand": "npx remotion studio src/index.tsx --port 3000",
+  "postAttachCommand": "npm install && npm run studio",
   "forwardPorts": [3000],
   "portsAttributes": {
     "3000": {
