@@ -1,0 +1,31 @@
+name: Render Cinematic Docu
+
+on:
+  workflow_dispatch:
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Auto-Install Remotion Engine
+        run: |
+          npm init -y
+          npm install react@18.2.0 react-dom@18.2.0 remotion@4.0.0 @remotion/cli@4.0.0
+
+      - name: Render 1080p Video
+        run: npx remotion render src/index.tsx DarkHistory out/video.mp4
+
+      - name: Save Video for Download
+        uses: actions/upload-artifact@v4
+        with:
+          name: kashmir-docu-video
+          path: out/video.mp4
+          
