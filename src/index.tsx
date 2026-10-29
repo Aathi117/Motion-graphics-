@@ -1,7 +1,10 @@
 import React from 'react';
 import { registerRoot, Composition, AbsoluteFill, interpolate, useCurrentFrame } from 'remotion';
 
-export const KashmirDocu: React.FC = () => {
+export const KashmirDocu: React.FC<{ title?: string; subtitle?: string }> = ({
+  title = "THE QUEEN'S DECEPTION",
+  subtitle = 'KASHMIR, 958 AD',
+}) => {
   const frame = useCurrentFrame();
 
   const scale = interpolate(frame, [0, 300], [1, 1.15], {
@@ -31,6 +34,8 @@ export const KashmirDocu: React.FC = () => {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
+          textAlign: 'center',
+          padding: '0 40px',
         }}
       >
         <h1
@@ -44,7 +49,7 @@ export const KashmirDocu: React.FC = () => {
             margin: 0,
           }}
         >
-          THE QUEEN'S DECEPTION
+          {title}
         </h1>
         <h2
           style={{
@@ -55,7 +60,7 @@ export const KashmirDocu: React.FC = () => {
             marginTop: '20px',
           }}
         >
-          KASHMIR, 958 AD
+          {subtitle}
         </h2>
       </div>
     </AbsoluteFill>
@@ -71,6 +76,10 @@ export const RemotionRoot: React.FC = () => {
       fps={30}
       width={1920}
       height={1080}
+      defaultProps={{
+        title: "THE QUEEN'S DECEPTION",
+        subtitle: 'KASHMIR, 958 AD',
+      }}
     />
   );
 };
