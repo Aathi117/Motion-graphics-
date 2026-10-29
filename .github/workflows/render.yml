@@ -2,15 +2,6 @@ name: Render Cinematic Docu
 
 on:
   workflow_dispatch:
-    inputs:
-      title:
-        description: 'Main Title (बड़ा टाइटल)'
-        required: true
-        default: "THE QUEEN'S DECEPTION"
-      subtitle:
-        description: 'Subtitle / Year (नीचे का टेक्स्ट)'
-        required: true
-        default: 'KASHMIR, 958 AD'
 
 jobs:
   render:
@@ -32,15 +23,13 @@ jobs:
       - name: Auto-Install Remotion Engine
         run: |
           npm init -y
-          npm install react@18.2.0 react-dom@18.2.0 remotion@4.0.200 @remotion/cli@4.0.200
+          npm install react@18.2.0 react-dom@18.2.0 remotion@4.0.200 @remotion/cli@4.0.200 @remotion/zod-types@4.0.200 zod@3.22.4
 
       - name: Pre-check Headless Browser
         run: npx remotion browser ensure
 
       - name: Render 1080p Video
-        env:
-          INPUT_Props: ${{ toJSON(github.event.inputs) }}
-        run: npx remotion render src/index.tsx DarkHistory out/video.mp4 --props="$INPUT_Props"
+        run: npx remotion render src/index.tsx DarkHistory out/video.mp4
 
       - name: Save Video for Download
         uses: actions/upload-artifact@v4
