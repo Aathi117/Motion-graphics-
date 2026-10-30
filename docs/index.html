@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Kashmir Docu Director Studio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background-color: #09090b; color: #f4f4f5; font-family: system-ui, sans-serif; overflow-x: hidden; }
+    @keyframes kenburns { 0% { transform: scale(1.05); } 100% { transform: scale(1.25); } }
+    @keyframes shake {
+      0%, 100% { transform: scale(1.18) translate(0, 0); }
+      20% { transform: scale(1.18) translate(-12px, 8px); }
+      40% { transform: scale(1.18) translate(12px, -10px); }
+      60% { transform: scale(1.18) translate(-10px, -6px); }
+      80% { transform: scale(1.18) translate(10px, 10px); }
+    }
+    @keyframes slash {
+      0% { width: 0%; opacity: 0; }
+      20% { width: 140%; opacity: 1; }
+      100% { width: 140%; opacity: 0; }
+    }
+    @keyframes thunder {
+      0%, 100% { opacity: 0; }
+      10%, 30% { opacity: 0.55; }
+      20% { opacity: 0.1; }
+    }
+    .anim-zoom { animation: kenburns 5s ease-out forwards; }
+    .anim-shake { animation: shake 0.35s infinite; }
+    .sword-line {
+      position: absolute; top: 50%; left: 50%; height: 8px;
+      background: linear-gradient(90deg, transparent, #fff, #ff3300, #fff, transparent);
+      box-shadow: 0 0 40px 12px rgba(255, 50, 0, 0.95);
+      transform: translate(-50%, -50%) rotate(-25deg);
+      animation: slash 0.6s ease-out forwards;
+    }
+    .thunder-flash { animation: thunder 1.2s ease-in-out infinite; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- Top Header -->
+  <header class="bg-zinc-900 border-b border-zinc-800 px-4 py-3 flex items-center justify-between sticky top-0 z-50">
+    <div class="flex items-center gap-2">
+      <span class="w-3 h-3 rounded-full bg-red-600 animate-pulse"></span>
+      <h1 class="font-black tracking-wider text-sm md:text-base uppercase">Kashmir Director Studio <span class="text-xs text-red-500 font-normal">LIVE 24/7</span></h1>
+    </div>
+    <button onclick="copyAndOpenActions()" class="bg-red-600 hover:bg-red-500 active:scale-95 transition text-white font-bold text-xs md:text-sm px-4 py-2 rounded-lg shadow-lg shadow-red-900/40">
+      🚀 Copy & Render 1080p MP4
+    </button>
+  </header>
+
+  <main class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 p-4 max-w-7xl mx-auto w-full">
+    
+    <!-- LEFT / TOP: Live 16:9 Cinema Preview Player -->
+    <div class="lg:col-span-7 flex flex-col gap-3">
+      <div id="player-box" class="relative w-full aspect-video bg-black rounded-xl overflow-hidden border border-zinc-800 shadow-2xl">
+        <!-- Background Image -->
+        <img id="preview-img" src="" class="w-full h-full object-cover brightness-50 contrast-125 anim-zoom" />
+        
+        <!-- Dark Vignette & Letterbox -->
+        <div class="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black/90 pointer-events-none"></div>
+        <div class="absolute top-0 inset-x-0 h-6 md:h-10 bg-black z-20"></div>
+        <div class="absolute bottom-0 inset-x-0 h-6 md:h-10 bg-black z-20"></div>
+
+        <!-- FX Overlays -->
+        <div id="fx-layer" class="absolute inset-0 pointer-events-none z-10"></div>
+
+        <!-- Center Era & Title -->
+        <div class="absolute inset-0 flex flex-col items-center justify-center text-center px-6 z-10 pointer-events-none">
+          <div id="preview-era" class="text-[10px] md:text-sm tracking-[0.35em] text-zinc-300 font-bold uppercase mb-1"></div>
+          <h2 id="preview-title" class="text-2xl md:text-5xl font-black uppercase tracking-wider text-white"></h2>
+        </div>
+
+        <!-- Bottom Narration Subtitle -->
+        <div class="absolute bottom-8 md:bottom-14 inset-x-0 flex justify-center px-4 z-20 pointer-events-none">
+          <div id="preview-sub-box" class="bg-black/85 border-t-2 border-b-2 px-4 py-2 max-w-[90%] shadow-2xl">
+            <p id="preview-sub" class="text-xs md:text-base text-zinc-100 text-center font-medium"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Timeline & Player Controls -->
+      <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-3 flex flex-col gap-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <button onclick="togglePlay()" id="play-btn" class="bg-zinc-100 text-black font-bold px-4 py-1.5 rounded-lg text-sm active:scale-95">▶ Play All</button>
+            <button onclick="triggerSlashFX()" class="bg-zinc-800 hover:bg-zinc-700 text-xs px-3 py-1.5 rounded-lg border border-zinc-700">⚔️ Test Sword Slash</button>
+          </div>
+          <span id="scene-counter" class="text-xs text-zinc-400 font-mono">Scene 1 of 3</span>
+        </div>
+
+        <!-- Multi-Scene Timeline Bars (KineMaster Style) -->
+        <div id="timeline-tracks" class="flex gap-1.5 overflow-x-auto pb-1"></div>
+      </div>
+
+      <!-- Paste AI Code Box -->
+      <div class="bg-zinc-900/90 border border-red-900/50 rounded-xl p-3">
+        <div class="flex items-center justify-between mb-1.5">
+          <label class="text-xs font-bold text-red-400 uppercase tracking-wider">⚡ Paste AI Scene Code (JSON) Here:</label>
+          <button onclick="applyPastedCode()" class="bg-red-600/20 border border-red-500/40 text-red-300 text-xs px-3 py-1 rounded hover:bg-red-600/30">Apply to Timeline</button>
+        </div>
+        <textarea id="json-box" rows="3" class="w-full bg-black/70 border border-zinc-800 rounded-lg p-2 text-xs font-mono text-green-400 focus:outline-none focus:border-red-500" placeholder="Paste JSON code from AI here..."></textarea>
+      </div>
+    </div>
+
+    <!-- RIGHT / BOTTOM: Visual Scene Controls -->
+    <div class="lg:col-span-5 bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex flex-col gap-3 h-fit">
+      <div class="flex items-center justify-between border-b border-zinc-800 pb-2">
+        <h3 class="font-bold text-sm uppercase tracking-wider text-zinc-300">🎛️ Edit Selected Scene</h3>
+        <div class="flex gap-1.5">
+          <button onclick="addNewScene()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-2.5 py-1 rounded">+ Add Scene</button>
+          <button onclick="deleteCurrentScene()" class="bg-zinc-800 hover:bg-red-900 text-zinc-300 text-xs px-2.5 py-1 rounded">🗑️ Delete</button>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-2.5 text-xs">
+        <div>
+          <label class="text-zinc-400 block mb-1">Era / Location (Top Text)</label>
+          <input id="inp-era" oninput="updateCurrentScene()" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-white" />
+        </div>
+        <div>
+          <label class="text-zinc-400 block mb-1">Main Heading (Big Title)</label>
+          <input id="inp-title" oninput="updateCurrentScene()" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-white font-bold" />
+        </div>
+        <div>
+          <label class="text-zinc-400 block mb-1">Bottom Subtitle / Narration</label>
+          <textarea id="inp-sub" rows="2" oninput="updateCurrentScene()" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-white"></textarea>
+        </div>
+        <div>
+          <label class="text-zinc-400 block mb-1">Background Image URL (4K Photo Link)</label>
+          <input id="inp-img" oninput="updateCurrentScene()" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-300 font-mono text-[11px]" />
+        </div>
+        <div class="grid grid-cols-3 gap-2">
+          <div>
+            <label class="text-zinc-400 block mb-1">Action Effect</label>
+            <select id="inp-fx" onchange="updateCurrentScene()" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-2 py-2 text-white">
+              <option value="sword-clash">⚔️ Sword Clash</option>
+              <option value="blood-thunder">⚡ Blood Thunder</option>
+              <option value="war-earthquake">🌋 War Quake</option>
+              <option value="slow-push">🎥 Slow Push</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-zinc-400 block mb-1">Duration (Sec)</label>
+            <input id="inp-dur" type="number" min="2" max="20" oninput="updateCurrentScene()" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-white" />
+          </div>
+          <div>
+            <label class="text-zinc-400 block mb-1">Glow Color</label>
+            <input id="inp-color" type="color" oninput="updateCurrentScene()" class="w-full h-9 bg-zinc-950 border border-zinc-800 rounded-lg cursor-pointer" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    let scenes = [
+      {
+        era: "KASHMIR • 958 AD",
+        title: "THE STORM OF STEEL",
+        subtitle: "Ghaati ki khamoshi toot chuki thi... aur hawa mein sirf lohe aur lahu ki gandh thi.",
+        imageUrl: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1920&q=85",
+        durationSec: 4,
+        fxType: "blood-thunder",
+        themeColor: "#ff1a1a"
+      },
+      {
+        era: "THE AMBUSH AT LOHARA",
+        title: "BLADES IN THE DARK",
+        subtitle: "Andheri raat mein jab pehli talwar chali, toh singhasan ki neev hil uthi!",
+        imageUrl: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=1920&q=85",
+        durationSec: 4,
+        fxType: "sword-clash",
+        themeColor: "#ff5500"
+      },
+      {
+        era: "BATTLE FOR THE CROWN",
+        title: "FALL OF THE REBELS",
+        subtitle: "Gaddaron ke har waar ka jawab Rani Didda ne das guna krurta se diya.",
+        imageUrl: "https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=1920&q=85",
+        durationSec: 4,
+        fxType: "war-earthquake",
+        themeColor: "#cc0000"
+      }
+    ];
+
+    let activeIndex = 0;
+    let isPlaying = false;
+    let playTimer = null;
+
+    function renderUI() {
+      const s = scenes[activeIndex];
+      document.getElementById('preview-era').innerText = s.era;
+      const titleEl = document.getElementById('preview-title');
+      titleEl.innerText = s.title;
+      titleEl.style.textShadow = `0 0 40px ${s.themeColor}, 0 6px 20px #000`;
+
+      document.getElementById('preview-sub').innerText = s.subtitle;
+      const subBox = document.getElementById('preview-sub-box');
+      subBox.style.borderColor = s.themeColor;
+
+      const imgEl = document.getElementById('preview-img');
+      imgEl.src = s.imageUrl;
+      imgEl.className = 'w-full h-full object-cover brightness-50 contrast-125 ' + (s.fxType === 'war-earthquake' ? 'anim-shake' : 'anim-zoom');
+
+      const fxLayer = document.getElementById('fx-layer');
+      fxLayer.innerHTML = '';
+      if (s.fxType === 'sword-clash') {
+        triggerSlashFX();
+      } else if (s.fxType === 'blood-thunder') {
+        fxLayer.innerHTML = `<div class="w-full h-full bg-red-600/30 thunder-flash"></div>`;
+      }
+
+      document.getElementById('scene-counter').innerText = `Scene ${activeIndex + 1} of ${scenes.length}`;
+
+      // Fill inputs
+      document.getElementById('inp-era').value = s.era;
+      document.getElementById('inp-title').value = s.title;
+      document.getElementById('inp-sub').value = s.subtitle;
+      document.getElementById('inp-img').value = s.imageUrl;
+      document.getElementById('inp-fx').value = s.fxType;
+      document.getElementById('inp-dur').value = s.durationSec;
+      document.getElementById('inp-color').value = s.themeColor;
+
+      // Update JSON box
+      document.getElementById('json-box').value = JSON.stringify(scenes);
+
+      // Render Timeline Clips
+      const tracks = document.getElementById('timeline-tracks');
+      tracks.innerHTML = scenes.map((item, idx) => `
+        <button onclick="selectScene(${idx})" class="flex-shrink-0 px-3 py-2 rounded-lg border text-left transition ${idx === activeIndex ? 'bg-red-950/60 border-red-500 text-white' : 'bg-zinc-950 border-zinc-800 text-zinc-400'}">
+          <div class="text-[10px] font-mono text-zinc-400">🎬 SCENE ${idx + 1} (${item.durationSec}s)</div>
+          <div class="text-xs font-bold truncate max-w-[130px]">${item.title}</div>
+        </button>
+      `).join('');
+    }
+
+    function triggerSlashFX() {
+      const fxLayer = document.getElementById('fx-layer');
+      fxLayer.innerHTML = `<div class="w-full h-full bg-red-700/40 animate-ping"></div><div class="sword-line"></div>`;
+      setTimeout(() => { if (scenes[activeIndex]?.fxType === 'sword-clash') fxLayer.innerHTML = ''; }, 650);
+    }
+
+    function selectScene(idx) {
+      activeIndex = idx;
+      renderUI();
+    }
+
+    function updateCurrentScene() {
+      const s = scenes[activeIndex];
+      s.era = document.getElementById('inp-era').value;
+      s.title = document.getElementById('inp-title').value;
+      s.subtitle = document.getElementById('inp-sub').value;
+      s.imageUrl = document.getElementById('inp-img').value;
+      s.fxType = document.getElementById('inp-fx').value;
+      s.durationSec = Number(document.getElementById('inp-dur').value) || 4;
+      s.themeColor = document.getElementById('inp-color').value;
+      renderUI();
+    }
+
+    function addNewScene() {
+      scenes.push({
+        era: "NEW ERA • 1000 AD",
+        title: "NEW BATTLE SCENE",
+        subtitle: "Yahan apni kahani ki अगली line likho...",
+        imageUrl: "https://images.unsplash.com/photo-1566837945700-30057527ade0?w=1920&q=85",
+        durationSec: 4,
+        fxType: "sword-clash",
+        themeColor: "#ff3300"
+      });
+      activeIndex = scenes.length - 1;
+      renderUI();
+    }
+
+    function deleteCurrentScene() {
+      if (scenes.length <= 1) return alert("Kam se kam 1 scene hona zaroori hai!");
+      scenes.splice(activeIndex, 1);
+      activeIndex = Math.max(0, activeIndex - 1);
+      renderUI();
+    }
+
+    function applyPastedCode() {
+      try {
+        const parsed = JSON.parse(document.getElementById('json-box').value);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          scenes = parsed;
+          activeIndex = 0;
+          renderUI();
+        }
+      } catch (e) {
+        alert("Code format sahi nahi hai! AI se poora JSON code copy karke paste karo.");
+      }
+    }
+
+    function togglePlay() {
+      const btn = document.getElementById('play-btn');
+      if (isPlaying) {
+        isPlaying = false;
+        clearTimeout(playTimer);
+        btn.innerText = "▶ Play All";
+        return;
+      }
+      isPlaying = true;
+      btn.innerText = "⏸ Pause";
+      playStep();
+    }
+
+    function playStep() {
+      if (!isPlaying) return;
+      renderUI();
+      const dur = (scenes[activeIndex].durationSec || 4) * 1000;
+      playTimer = setTimeout(() => {
+        if (!isPlaying) return;
+        activeIndex = (activeIndex + 1) % scenes.length;
+        playStep();
+      }, dur);
+    }
+
+    function copyAndOpenActions() {
+      const code = JSON.stringify(scenes);
+      navigator.clipboard.writeText(code);
+      alert("✅ Tumhara Scene Code Copy ho gaya hai! Ab Actions page khulega, wahan 'Run workflow' ke box mein ise Paste kar dena!");
+      const pathParts = window.location.pathname.split('/').filter(Boolean);
+      const user = window.location.hostname.split('.')[0];
+      const repo = pathParts[0] || '';
+      if (user && repo && window.location.hostname.includes('github.io')) {
+        window.open(`https://github.com/${user}/${repo}/actions`, '_blank');
+      }
+    }
+
+    renderUI();
+  </script>
+</body>
+</html>
