@@ -154,183 +154,246 @@
     </div>
 
   </main>
+    <!-- Apni docs/index.html mein <script> se </script> tak ki jagah yeh paste kar do -->
+<script>
+  let scenes = [];
+  let activeIndex = 0;
+  let isPlaying = false;
+  let playTimer = null;
+  let animFrame = 0;
 
-  <script>
-    let scenes = [
-      {
-        era: "KASHMIR • 958 AD",
-        title: "THE STORM OF STEEL",
-        subtitle: "Ghaati ki khamoshi toot chuki thi... aur hawa mein sirf lohe aur lahu ki gandh thi.",
-        imageUrl: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1920&q=85",
-        durationSec: 4,
-        fxType: "blood-thunder",
-        themeColor: "#ff1a1a"
-      },
-      {
-        era: "THE AMBUSH AT LOHARA",
-        title: "BLADES IN THE DARK",
-        subtitle: "Andheri raat mein jab pehli talwar chali, toh singhasan ki neev hil uthi!",
-        imageUrl: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=1920&q=85",
-        durationSec: 4,
-        fxType: "sword-clash",
-        themeColor: "#ff5500"
-      },
-      {
-        era: "BATTLE FOR THE CROWN",
-        title: "FALL OF THE REBELS",
-        subtitle: "Gaddaron ke har waar ka jawab Rani Didda ne das guna krurta se diya.",
-        imageUrl: "https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=1920&q=85",
-        durationSec: 4,
-        fxType: "war-earthquake",
-        themeColor: "#cc0000"
+  // Default Medieval Boat & Carpet JSON (with # comments support)
+  const DEFAULT_RAW_JSON = `# PART 1: RIVER BOAT APPROACH
+[
+  {
+    "partId": "PART_1_RIVER_APPROACH",
+    "sceneType": "medieval-river-boat",
+    "era": "JHELUM RIVER • 958 AD",
+    "title": "ENVOYS OF THE NORTH",
+    "subtitle": "Gahre paani aur kohre ko cheerte hue, shahi naav Qile ki deewaron ki taraf badh rahi thi...",
+    "imageUrl": "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1920&q=85",
+    "durationSec": 5,
+    "fxType": "slow-push",
+    "themeColor": "#f59e0b"
+  },
+# PART 2: FORTRESS GATE WELCOME
+  {
+    "partId": "PART_2_FORT_GATES",
+    "sceneType": "medieval-fort-gate",
+    "era": "LOHARA FORTRESS • MIDNIGHT",
+    "title": "THE TORCHES OF LOHARA",
+    "subtitle": "Qile ke burj par mashalein jal uthin aur bhari lakdi ke darwaze mehmaano ke liye khul gaye.",
+    "imageUrl": "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=1920&q=85",
+    "durationSec": 5,
+    "fxType": "blood-thunder",
+    "themeColor": "#ea580c"
+  },
+# PART 3: ROYAL CARPET PRESENTATION
+  {
+    "partId": "PART_3_CARPET_WELCOME",
+    "sceneType": "medieval-courtyard-welcome",
+    "era": "THE ROYAL DARBAR • 958 AD",
+    "title": "THE CRIMSON TRIBUTE",
+    "subtitle": "Mehmaano ne sone ke dhagon se buna shahi qaleen pesh kiya, aur darbar ne jhuk kar swagat kiya.",
+    "imageUrl": "https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=1920&q=85",
+    "durationSec": 6,
+    "fxType": "sword-clash",
+    "themeColor": "#dc2626"
+  }
+]`;
+
+  // Strips '#' comments so partitioned JSON works seamlessly
+  function parseCommentedJSON(rawText) {
+    const cleanLines = rawText
+      .split('\n')
+      .filter(line => !line.trim().startsWith('#'))
+      .join('\n');
+    return JSON.parse(cleanLines);
+  }
+
+  // Draws Live Animated SVG Boat, River, Fort & Royal Carpet inside #fx-layer
+  function renderLiveVectorAnimation() {
+    animFrame++;
+    const s = scenes[activeIndex];
+    if (!s) return;
+    const fxLayer = document.getElementById('fx-layer');
+    if (!fxLayer) return;
+
+    const boatX = ((animFrame * 1.6) % 520) - 80;
+    const boatBob = Math.sin(animFrame * 0.12) * 5;
+    const oarAngle = Math.sin(animFrame * 0.2) * 25;
+    const bowAngle = Math.sin(animFrame * 0.08) * 10 - 10;
+    const carpetLen = 55 + Math.abs(Math.sin(animFrame * 0.05)) * 65;
+
+    if (s.sceneType === 'medieval-river-boat' || activeIndex === 0) {
+      fxLayer.innerHTML = `
+        <svg viewBox="0 0 800 450" class="w-full h-full">
+          <!-- Distant Medieval Fort with Glowing Gate -->
+          <g transform="translate(540, 110)">
+            <rect x="20" y="50" width="180" height="120" fill="#090d16" stroke="#1e293b"/>
+            <rect x="0" y="20" width="45" height="150" fill="#06090f"/>
+            <rect x="175" y="15" width="50" height="155" fill="#06090f"/>
+            <path d="M 85 170 L 85 115 Q 110 90 135 115 L 135 170 Z" fill="#f59e0b" opacity="0.85"/>
+          </g>
+          <!-- Animated River Waves -->
+          <rect x="0" y="275" width="800" height="175" fill="rgba(7, 17, 30, 0.78)"/>
+          <!-- Moving Boat with Envoys & Rolled Carpet -->
+          <g transform="translate(${boatX}, ${255 + boatBob})">
+            <!-- Oarsman -->
+            <circle cx="45" cy="8" r="7" fill="#cbd5e1"/>
+            <rect x="38" y="15" width="14" height="28" fill="#334155"/>
+            <!-- Envoy Holding Rolled Royal Carpet -->
+            <circle cx="95" cy="4" r="8" fill="#fde68a"/>
+            <rect x="86" y="12" width="18" height="32" fill="#7f1d1d" stroke="#fbbf24"/>
+            <!-- Rolled Red-Gold Carpet in Hands -->
+            <rect x="98" y="18" width="48" height="12" rx="4" fill="#991b1b" stroke="#fde047" stroke-width="2"/>
+            <!-- Boat Hull -->
+            <path d="M 10 38 Q 85 58 165 35 Q 185 22 195 5 Q 180 48 155 58 L 28 58 Z" fill="#27170c" stroke="#d97706" stroke-width="2"/>
+            <!-- Glowing Torch on Boat Bow -->
+            <circle cx="185" cy="2" r="${14 + Math.sin(animFrame * 0.4) * 4}" fill="rgba(255,140,0,0.65)"/>
+            <circle cx="185" cy="2" r="4" fill="#fff"/>
+            <!-- Rowing Oar -->
+            <line x1="48" y1="28" x2="${35 + oarAngle * 0.5}" y2="68" stroke="#b45309" stroke-width="4"/>
+          </g>
+        </svg>`;
+    } else {
+      fxLayer.innerHTML = `
+        <svg viewBox="0 0 800 450" class="w-full h-full">
+          <!-- Courtyard Floor -->
+          <rect x="0" y="310" width="800" height="140" fill="rgba(24, 10, 5, 0.85)" stroke="#b45309"/>
+          <!-- Left Envoys Presenting Unrolling Carpet -->
+          <g transform="translate(190, 215)">
+            <circle cx="0" cy="0" r="14" fill="#fde68a"/>
+            <rect x="-16" y="15" width="32" height="85" fill="#7f1d1d" stroke="#fbbf24" stroke-width="2"/>
+            <!-- Unrolling Royal Carpet -->
+            <rect x="18" y="38" width="${carpetLen}" height="18" rx="5" fill="#991b1b" stroke="#fde047" stroke-width="2.5"/>
+          </g>
+          <!-- Right Fortress King & Guards Bowing in Welcome -->
+          <g transform="translate(540, 215)">
+            <g transform="rotate(${bowAngle} 0 60)">
+              <circle cx="0" cy="-5" r="15" fill="#fde68a"/>
+              <path d="M -16 -12 Q 0 -32 16 -12 Z" fill="#fbbf24"/>
+              <rect x="-18" y="12" width="36" height="88" fill="#991b1b" stroke="#fbbf24" stroke-width="2"/>
+              <line x1="-15" y1="30" x2="-55" y2="15" stroke="#991b1b" stroke-width="8"/>
+            </g>
+          </g>
+        </svg>`;
+    }
+    requestAnimationFrame(renderLiveVectorAnimation);
+  }
+
+  function renderUI() {
+    const s = scenes[activeIndex];
+    if (!s) return;
+    document.getElementById('preview-era').innerText = s.era || '';
+    const titleEl = document.getElementById('preview-title');
+    titleEl.innerText = s.title || '';
+    titleEl.style.textShadow = `0 0 40px ${s.themeColor || '#ff3300'}, 0 6px 20px #000`;
+
+    document.getElementById('preview-sub').innerText = s.subtitle || '';
+    document.getElementById('preview-sub-box').style.borderColor = s.themeColor || '#ff3300';
+    document.getElementById('preview-img').src = s.imageUrl || '';
+    document.getElementById('scene-counter').innerText = `Part ${activeIndex + 1} of ${scenes.length}`;
+
+    document.getElementById('inp-era').value = s.era || '';
+    document.getElementById('inp-title').value = s.title || '';
+    document.getElementById('inp-sub').value = s.subtitle || '';
+    document.getElementById('inp-img').value = s.imageUrl || '';
+    document.getElementById('inp-fx').value = s.fxType || 'slow-push';
+    document.getElementById('inp-dur').value = s.durationSec || 5;
+    document.getElementById('inp-color').value = s.themeColor || '#f59e0b';
+
+    const tracks = document.getElementById('timeline-tracks');
+    tracks.innerHTML = scenes.map((item, idx) => `
+      <button onclick="selectScene(${idx})" class="flex-shrink-0 px-3 py-2 rounded-lg border text-left transition ${idx === activeIndex ? 'bg-red-950/60 border-red-500 text-white' : 'bg-zinc-950 border-zinc-800 text-zinc-400'}">
+        <div class="text-[10px] font-mono text-amber-400">${item.partId || 'PART ' + (idx + 1)} (${item.durationSec}s)</div>
+        <div class="text-xs font-bold truncate max-w-[140px]">${item.title}</div>
+      </button>
+    `).join('');
+  }
+
+  function applyPastedCode() {
+    try {
+      const raw = document.getElementById('json-box').value;
+      const parsed = parseCommentedJSON(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        scenes = parsed;
+        activeIndex = 0;
+        renderUI();
       }
-    ];
-
-    let activeIndex = 0;
-    let isPlaying = false;
-    let playTimer = null;
-
-    function renderUI() {
-      const s = scenes[activeIndex];
-      document.getElementById('preview-era').innerText = s.era;
-      const titleEl = document.getElementById('preview-title');
-      titleEl.innerText = s.title;
-      titleEl.style.textShadow = `0 0 40px ${s.themeColor}, 0 6px 20px #000`;
-
-      document.getElementById('preview-sub').innerText = s.subtitle;
-      const subBox = document.getElementById('preview-sub-box');
-      subBox.style.borderColor = s.themeColor;
-
-      const imgEl = document.getElementById('preview-img');
-      imgEl.src = s.imageUrl;
-      imgEl.className = 'w-full h-full object-cover brightness-50 contrast-125 ' + (s.fxType === 'war-earthquake' ? 'anim-shake' : 'anim-zoom');
-
-      const fxLayer = document.getElementById('fx-layer');
-      fxLayer.innerHTML = '';
-      if (s.fxType === 'sword-clash') {
-        triggerSlashFX();
-      } else if (s.fxType === 'blood-thunder') {
-        fxLayer.innerHTML = `<div class="w-full h-full bg-red-600/30 thunder-flash"></div>`;
-      }
-
-      document.getElementById('scene-counter').innerText = `Scene ${activeIndex + 1} of ${scenes.length}`;
-
-      // Fill inputs
-      document.getElementById('inp-era').value = s.era;
-      document.getElementById('inp-title').value = s.title;
-      document.getElementById('inp-sub').value = s.subtitle;
-      document.getElementById('inp-img').value = s.imageUrl;
-      document.getElementById('inp-fx').value = s.fxType;
-      document.getElementById('inp-dur').value = s.durationSec;
-      document.getElementById('inp-color').value = s.themeColor;
-
-      // Update JSON box
-      document.getElementById('json-box').value = JSON.stringify(scenes);
-
-      // Render Timeline Clips
-      const tracks = document.getElementById('timeline-tracks');
-      tracks.innerHTML = scenes.map((item, idx) => `
-        <button onclick="selectScene(${idx})" class="flex-shrink-0 px-3 py-2 rounded-lg border text-left transition ${idx === activeIndex ? 'bg-red-950/60 border-red-500 text-white' : 'bg-zinc-950 border-zinc-800 text-zinc-400'}">
-          <div class="text-[10px] font-mono text-zinc-400">🎬 SCENE ${idx + 1} (${item.durationSec}s)</div>
-          <div class="text-xs font-bold truncate max-w-[130px]">${item.title}</div>
-        </button>
-      `).join('');
+    } catch (e) {
+      alert("JSON check karo: Make sure '[' se shuru ho aur ']' par khatam ho!");
     }
+  }
 
-    function triggerSlashFX() {
-      const fxLayer = document.getElementById('fx-layer');
-      fxLayer.innerHTML = `<div class="w-full h-full bg-red-700/40 animate-ping"></div><div class="sword-line"></div>`;
-      setTimeout(() => { if (scenes[activeIndex]?.fxType === 'sword-clash') fxLayer.innerHTML = ''; }, 650);
-    }
+  function selectScene(idx) { activeIndex = idx; renderUI(); }
+  function triggerSlashFX() { activeIndex = (activeIndex + 1) % scenes.length; renderUI(); }
 
-    function selectScene(idx) {
-      activeIndex = idx;
-      renderUI();
-    }
-
-    function updateCurrentScene() {
-      const s = scenes[activeIndex];
-      s.era = document.getElementById('inp-era').value;
-      s.title = document.getElementById('inp-title').value;
-      s.subtitle = document.getElementById('inp-sub').value;
-      s.imageUrl = document.getElementById('inp-img').value;
-      s.fxType = document.getElementById('inp-fx').value;
-      s.durationSec = Number(document.getElementById('inp-dur').value) || 4;
-      s.themeColor = document.getElementById('inp-color').value;
-      renderUI();
-    }
-
-    function addNewScene() {
-      scenes.push({
-        era: "NEW ERA • 1000 AD",
-        title: "NEW BATTLE SCENE",
-        subtitle: "Yahan apni kahani ki अगली line likho...",
-        imageUrl: "https://images.unsplash.com/photo-1566837945700-30057527ade0?w=1920&q=85",
-        durationSec: 4,
-        fxType: "sword-clash",
-        themeColor: "#ff3300"
-      });
-      activeIndex = scenes.length - 1;
-      renderUI();
-    }
-
-    function deleteCurrentScene() {
-      if (scenes.length <= 1) return alert("Kam se kam 1 scene hona zaroori hai!");
-      scenes.splice(activeIndex, 1);
-      activeIndex = Math.max(0, activeIndex - 1);
-      renderUI();
-    }
-
-    function applyPastedCode() {
-      try {
-        const parsed = JSON.parse(document.getElementById('json-box').value);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          scenes = parsed;
-          activeIndex = 0;
-          renderUI();
-        }
-      } catch (e) {
-        alert("Code format sahi nahi hai! AI se poora JSON code copy karke paste karo.");
-      }
-    }
-
-    function togglePlay() {
-      const btn = document.getElementById('play-btn');
-      if (isPlaying) {
-        isPlaying = false;
-        clearTimeout(playTimer);
-        btn.innerText = "▶ Play All";
-        return;
-      }
-      isPlaying = true;
-      btn.innerText = "⏸ Pause";
-      playStep();
-    }
-
-    function playStep() {
-      if (!isPlaying) return;
-      renderUI();
-      const dur = (scenes[activeIndex].durationSec || 4) * 1000;
-      playTimer = setTimeout(() => {
-        if (!isPlaying) return;
-        activeIndex = (activeIndex + 1) % scenes.length;
-        playStep();
-      }, dur);
-    }
-
-    function copyAndOpenActions() {
-      const code = JSON.stringify(scenes);
-      navigator.clipboard.writeText(code);
-      alert("✅ Tumhara Scene Code Copy ho gaya hai! Ab Actions page khulega, wahan 'Run workflow' ke box mein ise Paste kar dena!");
-      const pathParts = window.location.pathname.split('/').filter(Boolean);
-      const user = window.location.hostname.split('.')[0];
-      const repo = pathParts[0] || '';
-      if (user && repo && window.location.hostname.includes('github.io')) {
-        window.open(`https://github.com/${user}/${repo}/actions`, '_blank');
-      }
-    }
-
+  function updateCurrentScene() {
+    const s = scenes[activeIndex];
+    s.era = document.getElementById('inp-era').value;
+    s.title = document.getElementById('inp-title').value;
+    s.subtitle = document.getElementById('inp-sub').value;
+    s.imageUrl = document.getElementById('inp-img').value;
+    s.fxType = document.getElementById('inp-fx').value;
+    s.durationSec = Number(document.getElementById('inp-dur').value) || 5;
+    s.themeColor = document.getElementById('inp-color').value;
+    document.getElementById('json-box').value = JSON.stringify(scenes, null, 2);
     renderUI();
-  </script>
+  }
+
+  function addNewScene() {
+    scenes.push({
+      partId: `PART_${scenes.length + 1}_CUSTOM`,
+      sceneType: "medieval-river-boat",
+      era: "KASHMIR • 958 AD",
+      title: "NEW MEDIEVAL PART",
+      subtitle: "Naye hisse ki kahani yahan likho...",
+      imageUrl: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1920&q=85",
+      durationSec: 5,
+      fxType: "slow-push",
+      themeColor: "#f59e0b"
+    });
+    activeIndex = scenes.length - 1;
+    renderUI();
+  }
+
+  function deleteCurrentScene() {
+    if (scenes.length <= 1) return;
+    scenes.splice(activeIndex, 1);
+    activeIndex = Math.max(0, activeIndex - 1);
+    renderUI();
+  }
+
+  function togglePlay() {
+    const btn = document.getElementById('play-btn');
+    if (isPlaying) {
+      isPlaying = false; clearTimeout(playTimer); btn.innerText = "▶ Play All"; return;
+    }
+    isPlaying = true; btn.innerText = "⏸ Pause"; playStep();
+  }
+
+  function playStep() {
+    if (!isPlaying) return;
+    renderUI();
+    playTimer = setTimeout(() => {
+      if (!isPlaying) return;
+      activeIndex = (activeIndex + 1) % scenes.length;
+      playStep();
+    }, (scenes[activeIndex].durationSec || 5) * 1000);
+  }
+
+  function copyAndOpenActions() {
+    const cleanJson = JSON.stringify(scenes);
+    navigator.clipboard.writeText(cleanJson);
+    alert("✅ Clean JSON Copy ho gaya! Ab GitHub Actions ke box mein Paste kar do!");
+  }
+
+  // Initialize with commented JSON
+  document.getElementById('json-box').value = DEFAULT_RAW_JSON;
+  scenes = parseCommentedJSON(DEFAULT_RAW_JSON);
+  renderUI();
+  requestAnimationFrame(renderLiveVectorAnimation);
+</script>
 </body>
 </html>
